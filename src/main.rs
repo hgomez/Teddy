@@ -1,42 +1,38 @@
-extern crate iron;
-extern crate router;
-extern crate hyper;
-
-use iron::prelude::*;
-
-use router::Router;
-
-mod handlers;
-use handlers::{welcome_handler, ping_handler, download_handler, exec_handler, upload_handler};
-
-mod auth;
-use auth::AuthChecker;
-
-mod responsetime;
-use responsetime::ResponseTime;
+extern crate actix_web;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+#[macro_use]
+extern crate failure;
+#[macro_use]
+extern crate log;
+extern crate simple_logger;
+extern crate futures;
+extern crate base64;
 
 mod conf;
-use conf::get_config;
-use conf::get_address;
+mod handlers;
+mod middleware;
 
-extern crate time;
-extern crate url;
-
+use actix_web::http::Method;
+use actix_web::{server, App};
 
 fn main() {
-    let conf = get_config();
+    simple_logger::init_with_level(log::Level::Info).unwrap();
 
-    let mut router = Router::new();
-    router.get("/", welcome_handler, "welcome");
-    router.get("/ping", ping_handler, "ping");
-    router.get("/download", download_handler, "download");
-    router.post("/upload", upload_handler, "upload");
-    router.post("/exec", exec_handler, "exec");
-
-    let mut chain = Chain::new(router);
-    chain.link_before(ResponseTime);
-    chain.link_before(AuthChecker::new(&conf.authentication));
-    chain.link_after(ResponseTime);
-
-    Iron::new(chain).http(&get_address(conf)).expect("Failed to start HTTP server");
+    info!("Starting Teddy");
+    let configuration = conf::load_config();
+    let address = conf::get_address(&configuration);
+    server::new(move ||
+        App::new()
+            .middleware(middleware::ResponseTime::default())
+            .middleware(middleware::Authentication::new(&configuration))
+            .resource("/", |r| r.method(Method::GET).f(handlers::welcome))
+            .resource("/ping", |r| r.method(Method::GET).f(handlers::ping))
+            .resource("/download", |r| r.method(Method::GET).with(handlers::download))
+            .resource("/upload", |r| r.method(Method::POST).with(handlers::upload))
+    ).bind(address)
+        .unwrap()
+        .run();
 }
