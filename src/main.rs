@@ -9,9 +9,11 @@ extern crate failure;
 extern crate log;
 extern crate simple_logger;
 extern crate futures;
+extern crate base64;
 
 mod conf;
 mod handlers;
+mod middleware;
 
 use actix_web::http::Method;
 use actix_web::{server, App};
@@ -21,13 +23,16 @@ fn main() {
 
     info!("Starting Teddy");
     let configuration = conf::load_config();
-    server::new(||
+    let address = conf::get_address(&configuration);
+    server::new(move ||
         App::new()
+            .middleware(middleware::ResponseTime::default())
+            .middleware(middleware::Authentication::new(&configuration))
             .resource("/", |r| r.method(Method::GET).f(handlers::welcome))
             .resource("/ping", |r| r.method(Method::GET).f(handlers::ping))
             .resource("/download", |r| r.method(Method::GET).with(handlers::download))
             .resource("/upload", |r| r.method(Method::POST).with(handlers::upload))
-    ).bind(conf::get_address(&configuration))
+    ).bind(address)
         .unwrap()
         .run();
 }

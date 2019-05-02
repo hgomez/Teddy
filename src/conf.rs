@@ -13,20 +13,23 @@ enum ConfigurationError {
 }
 
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Configuration{
     #[serde(default = "Configuration::default_host")]
     pub host: String,
+    #[serde(default = "Configuration::default_port")]
     pub port: u16,
-    pub authentication:String,
+    pub user:String,
+    pub password: String
 }
 
 impl Default for Configuration {
     fn default() -> Self {
         Configuration {
             host: Configuration::default_host(),
-            port: 3000,
-            authentication: String::from("teddy:rocks"),
+            port: Configuration::default_port(),
+            user: String::from("teddy"),
+            password: String::from("rocks")
         }
     }
 }
@@ -34,6 +37,10 @@ impl Default for Configuration {
 impl Configuration {
     fn default_host() -> String {
         String::from("0.0.0.0")
+    }
+
+    fn default_port() -> u16 {
+        3000
     }
 }
 

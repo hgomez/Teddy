@@ -73,7 +73,7 @@ fn save_file(
                     .map_err(|e| {
                         error!("save_file failed, {:?}", e);
                         error::ErrorInternalServerError(e)
-                    }).
+                    })
             })
     )
 }
