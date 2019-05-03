@@ -1,10 +1,13 @@
 use actix_web::http::header;
-use actix_web::{dev, fs, error, multipart, HttpRequest, Error, Query, FutureResponse, HttpResponse, HttpMessage};
+use actix_web::{dev, fs, error, multipart, HttpRequest, Error, Query, Json, FutureResponse, HttpResponse, HttpMessage};
 use std::path::Path;
 use futures::future;
 use futures::{Future, Stream};
 use std::fs as sys_fs;
 use std::io::Write;
+use std::process::Command;
+use std::env;
+use std::ffi::OsString;
 
 pub fn welcome(_req: &HttpRequest) -> &'static str {
     "Welcome to Teddy, see ya !"
@@ -41,6 +44,37 @@ pub fn upload(req: HttpRequest<()>) -> FutureResponse<HttpResponse> {
             .flatten()
             .collect()
             .map(|file_name| HttpResponse::Ok().json(file_name))
+    )
+}
+
+#[derive(Deserialize, Debug)]
+pub struct CommandQuery {
+    command: String,
+    parameters: String,
+}
+
+#[derive(Serialize, Debug)]
+pub struct CommandResponse {
+    status: Option<i32>,
+    stdout: String,
+    stderr: String,
+}
+
+pub fn execute(command: Json<CommandQuery>) -> FutureResponse<HttpResponse> {
+    Box::new(
+        future::result(
+            Command::new(command.command.replace("\"", ""))
+                .env("PATH", env::var_os("PATH").unwrap_or_else(|| OsString::from("")))
+                .arg(command.parameters.replace("\"", ""))
+                .output()
+                .map(|output|
+                    CommandResponse {
+                        status: output.status.code(),
+                        stdout: String::from_utf8(output.stdout).unwrap_or_else(|_| String::from("Can't parse command stdout")),
+                        stderr: String::from_utf8(output.stderr).unwrap_or_else(|_| String::from("Can't parse command stderr")),
+                    })
+                .map_err(|e| error::ErrorInternalServerError(e))
+        ).map(|response_body| HttpResponse::Ok().json(response_body))
     )
 }
 
