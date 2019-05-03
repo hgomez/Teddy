@@ -17,6 +17,7 @@ mod middleware;
 
 use actix_web::http::Method;
 use actix_web::{server, App};
+use actix_web::middleware::Logger;
 
 fn main() {
     simple_logger::init_with_level(log::Level::Info).unwrap();
@@ -26,12 +27,13 @@ fn main() {
     let address = conf::get_address(&configuration);
     server::new(move ||
         App::new()
-            .middleware(middleware::ResponseTime::default())
+            .middleware(Logger::default())
             .middleware(middleware::Authentication::new(&configuration))
             .resource("/", |r| r.method(Method::GET).f(handlers::welcome))
             .resource("/ping", |r| r.method(Method::GET).f(handlers::ping))
             .resource("/download", |r| r.method(Method::GET).with(handlers::download))
             .resource("/upload", |r| r.method(Method::POST).with(handlers::upload))
+            .resource("/exec", |r| r.method(Method::POST).with(handlers::execute))
     ).bind(address)
         .unwrap()
         .run();
