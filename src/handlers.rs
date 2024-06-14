@@ -80,7 +80,7 @@ pub fn execute(command: Json<CommandQuery>) -> FutureResponse<HttpResponse> {
 
 fn save_file(
     field: multipart::Field<dev::Payload>,
-) -> Box<Future<Item=String, Error=Error>> {
+) -> Box<dyn Future<Item=String, Error=Error>> {
     Box::new(
         future::result(
             field.content_disposition()
@@ -114,7 +114,7 @@ fn save_file(
 
 fn handle_multipart_item(
     item: multipart::MultipartItem<dev::Payload>,
-) -> Box<Stream<Item=String, Error=Error>> {
+) -> Box<dyn Stream<Item=String, Error=Error>> {
     match item {
         multipart::MultipartItem::Field(field) => {
             Box::new(save_file(field).into_stream())
