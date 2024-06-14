@@ -1,13 +1,16 @@
 use actix_web::http::header;
-use actix_web::{dev, fs, error, multipart, HttpRequest, Error, Query, Json, FutureResponse, HttpResponse, HttpMessage};
-use std::path::Path;
+use actix_web::{
+    dev, error, fs, multipart, Error, FutureResponse, HttpMessage, HttpRequest, HttpResponse, Json,
+    Query,
+};
 use futures::future;
 use futures::{Future, Stream};
-use std::fs as sys_fs;
-use std::io::Write;
-use std::process::Command;
 use std::env;
 use std::ffi::OsString;
+use std::fs as sys_fs;
+use std::io::Write;
+use std::path::Path;
+use std::process::Command;
 
 pub fn welcome(_req: &HttpRequest) -> &'static str {
     "Welcome to Teddy, see ya !"
@@ -19,13 +22,14 @@ pub fn ping(_req: &HttpRequest) -> &'static str {
 
 #[derive(Deserialize, Debug)]
 pub struct DownloadQuery {
-    path: String
+    path: String,
 }
 
 pub fn download(query: Query<DownloadQuery>) -> Result<fs::NamedFile, Error> {
     debug!("Download handler for file {:?}", query);
     let file = fs::NamedFile::open(&query.path)?;
-    let file_name = Path::new(&query.path).file_name()
+    let file_name = Path::new(&query.path)
+        .file_name()
         .and_then(|os_str| os_str.to_str().map(|r_str| String::from(r_str)))
         .map(|file_name| file_name.replace("\"", ""))
         .unwrap_or_else(|| String::from("Undefined"));
@@ -43,7 +47,7 @@ pub fn upload(req: HttpRequest<()>) -> FutureResponse<HttpResponse> {
             .map(handle_multipart_item)
             .flatten()
             .collect()
-            .map(|file_name| HttpResponse::Ok().json(file_name))
+            .map(|file_name| HttpResponse::Ok().json(file_name)),
     )
 }
 
@@ -64,61 +68,63 @@ pub fn execute(command: Json<CommandQuery>) -> FutureResponse<HttpResponse> {
     Box::new(
         future::result(
             Command::new(command.command.replace("\"", ""))
-                .env("PATH", env::var_os("PATH").unwrap_or_else(|| OsString::from("")))
+                .env(
+                    "PATH",
+                    env::var_os("PATH").unwrap_or_else(|| OsString::from("")),
+                )
                 .arg(command.parameters.replace("\"", ""))
                 .output()
-                .map(|output|
-                    CommandResponse {
-                        status: output.status.code(),
-                        stdout: String::from_utf8(output.stdout).unwrap_or_else(|_| String::from("Can't parse command stdout")),
-                        stderr: String::from_utf8(output.stderr).unwrap_or_else(|_| String::from("Can't parse command stderr")),
-                    })
-                .map_err(|e| error::ErrorInternalServerError(e))
-        ).map(|response_body| HttpResponse::Ok().json(response_body))
+                .map(|output| CommandResponse {
+                    status: output.status.code(),
+                    stdout: String::from_utf8(output.stdout)
+                        .unwrap_or_else(|_| String::from("Can't parse command stdout")),
+                    stderr: String::from_utf8(output.stderr)
+                        .unwrap_or_else(|_| String::from("Can't parse command stderr")),
+                })
+                .map_err(|e| error::ErrorInternalServerError(e)),
+        )
+        .map(|response_body| HttpResponse::Ok().json(response_body)),
     )
 }
 
 fn save_file(
     field: multipart::Field<dev::Payload>,
-) -> Box<dyn Future<Item=String, Error=Error>> {
+) -> Box<dyn Future<Item = String, Error = Error>> {
     Box::new(
         future::result(
-            field.content_disposition()
-                .and_then(|cd|
-                    cd.get_name()
-                        .map(|v| String::from(v)))
-                .ok_or(error::ErrorBadRequest("Missing name in multipart data")))
-            .and_then(|file_name|
-                sys_fs::File::create(file_name.clone())
-                    .map_err(|e| error::ErrorInternalServerError(e))
-                    .map(|file| (file_name, file)))
-            .and_then(|(file_name, mut file)| {
-                debug!("Saving {} file from upload", file_name);
-                field
-                    .fold(file_name, move |acc, bytes| {
-                        let rt = file
-                            .write_all(bytes.as_ref())
-                            .map_err(|e| {
-                                error!("Error saving file : {:?}", e);
-                                error::MultipartError::Payload(error::PayloadError::Io(e))
-                            });
-                        future::result(rt.map(|_| acc))
-                    })
-                    .map_err(|e| {
-                        error!("save_file failed, {:?}", e);
-                        error::ErrorInternalServerError(e)
-                    })
-            })
+            field
+                .content_disposition()
+                .and_then(|cd| cd.get_name().map(|v| String::from(v)))
+                .ok_or(error::ErrorBadRequest("Missing name in multipart data")),
+        )
+        .and_then(|file_name| {
+            sys_fs::File::create(file_name.clone())
+                .map_err(|e| error::ErrorInternalServerError(e))
+                .map(|file| (file_name, file))
+        })
+        .and_then(|(file_name, mut file)| {
+            debug!("Saving {} file from upload", file_name);
+            field
+                .fold(file_name, move |acc, bytes| {
+                    let rt = file.write_all(bytes.as_ref()).map_err(|e| {
+                        error!("Error saving file : {:?}", e);
+                        error::MultipartError::Payload(error::PayloadError::Io(e))
+                    });
+                    future::result(rt.map(|_| acc))
+                })
+                .map_err(|e| {
+                    error!("save_file failed, {:?}", e);
+                    error::ErrorInternalServerError(e)
+                })
+        }),
     )
 }
 
 fn handle_multipart_item(
     item: multipart::MultipartItem<dev::Payload>,
-) -> Box<dyn Stream<Item=String, Error=Error>> {
+) -> Box<dyn Stream<Item = String, Error = Error>> {
     match item {
-        multipart::MultipartItem::Field(field) => {
-            Box::new(save_file(field).into_stream())
-        }
+        multipart::MultipartItem::Field(field) => Box::new(save_file(field).into_stream()),
         multipart::MultipartItem::Nested(mp) => Box::new(
             mp.map_err(error::ErrorInternalServerError)
                 .map(handle_multipart_item)
