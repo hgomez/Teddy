@@ -2,7 +2,7 @@ use http::header;
 use actix_web::{http, error, HttpRequest, HttpResponse, Result};
 use actix_web::middleware::{Middleware, Started, Response};
 use crate::conf::Configuration;
-use base64;
+use base64::{Engine as _, engine::general_purpose};
 
 pub struct Authentication {
     token: String
@@ -39,7 +39,7 @@ fn parse(header: &header::HeaderValue) -> Result<String, failure::Error> {
 impl Authentication {
     pub fn new(configuration: &Configuration) -> Self {
         Authentication{
-            token: base64::encode(&format!("{}:{}", configuration.user, configuration.password))
+            token: general_purpose::STANDARD.encode(&format!("{}:{}", configuration.user, configuration.password))
         }
     }
 }
