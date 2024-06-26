@@ -1,4 +1,7 @@
-use failure::Error;
+use failure::{Error, Fail};
+use log::{info, warn};
+use serde::Deserialize;
+use serde_json::from_reader;
 use std::fs::File;
 use std::io::BufReader;
 
@@ -65,7 +68,7 @@ pub fn load_config() -> Configuration {
 
 fn parse_configuration(file: File) -> Result<Configuration, Error> {
     let reader = BufReader::new(file);
-    let result: Configuration = serde_json::from_reader(reader)?;
+    let result: Configuration = from_reader(reader)?;
     Ok(result)
 }
 

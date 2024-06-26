@@ -1,43 +1,61 @@
-extern crate actix_web;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
-#[macro_use]
-extern crate failure;
-#[macro_use]
-extern crate log;
-extern crate base64;
-extern crate futures;
-extern crate simple_logger;
-
 mod conf;
 mod handlers;
 mod middleware;
 
-use actix_web::http::Method;
+use actix_web::guard::{Guard, GuardContext};
 use actix_web::middleware::Logger;
-use actix_web::{server, App};
+use actix_web::web::{self, get, post, Data};
+use actix_web::{http, main, App, HttpServer};
+use log::info;
 
-fn main() {
+use base64::{engine::general_purpose, Engine as _};
+
+#[derive(Clone)]
+struct Authorization {
+    pub token: String,
+}
+
+#[derive(Clone)]
+struct AuthorizationGuard;
+
+impl Guard for AuthorizationGuard {
+    fn check(&self, req: &GuardContext) -> bool {
+        match req.head().headers().get(http::header::AUTHORIZATION) {
+            Some(token) => {
+                token.to_str().unwrap_or("") == req.app_data::<Authorization>().unwrap().token
+            }
+            None => false,
+        }
+    }
+}
+
+#[main]
+async fn main() -> std::io::Result<()> {
     simple_logger::init_with_level(log::Level::Info).unwrap();
 
     info!("Starting Teddy");
     let configuration = conf::load_config();
     let address = conf::get_address(&configuration);
-    server::new(move || {
+
+    HttpServer::new(move || {
         App::new()
-            .middleware(Logger::default())
-            .middleware(middleware::Authentication::new(&configuration))
-            .resource("/", |r| r.method(Method::GET).f(handlers::welcome))
-            .resource("/ping", |r| r.method(Method::GET).f(handlers::ping))
-            .resource("/download", |r| {
-                r.method(Method::GET).with(handlers::download)
-            })
-            .resource("/upload", |r| r.method(Method::POST).with(handlers::upload))
-            .resource("/exec", |r| r.method(Method::POST).with(handlers::execute))
+            .app_data(Data::new(Authorization {
+                token: general_purpose::STANDARD.encode(&format!(
+                    "{}:{}",
+                    configuration.user, configuration.password
+                )),
+            }))
+            .wrap(Logger::default())
+            .route("/", web::route().to(handlers::welcome))
+            .route("/ping", get().to(handlers::ping))
+            .route("/download", get().to(handlers::download))
+            .route("/upload", get().to(handlers::upload))
+            .route(
+                "/exec",
+                post().guard(AuthorizationGuard).to(handlers::execute),
+            )
     })
-    .bind(address)
-    .unwrap()
-    .run();
+    .bind(address)?
+    .run()
+    .await
 }
