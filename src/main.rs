@@ -18,14 +18,14 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(guards::Authorization::new(&configuration)))
             .wrap(middleware::Logger::default())
-            .route("/", web::get().to(handlers::welcome))
-            .route("/ping", web::get().to(handlers::ping))
+            .route("/", web::get().to(handlers::welcome::handler))
+            .route("/ping", web::get().to(handlers::ping::handler))
             .service(
                 web::scope("/admin")
                     .guard(guards::AuthorizationGuard)
-                    .route("/download", web::get().to(handlers::download))
-                    .route("/upload", web::get().to(handlers::upload))
-                    .route("/exec", web::post().to(handlers::execute)),
+                    .route("/download", web::get().to(handlers::download::handler))
+                    .route("/upload", web::get().to(handlers::upload::handler))
+                    .route("/exec", web::post().to(handlers::execute::handler)),
             )
     })
     .bind(address)?
