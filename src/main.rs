@@ -19,12 +19,23 @@ struct Authorization {
 struct AuthorizationGuard;
 
 impl Guard for AuthorizationGuard {
-    fn check(&self, req: &GuardContext) -> bool {
-        match req.head().headers().get(http::header::AUTHORIZATION) {
-            Some(token) => {
-                token.to_str().unwrap_or("") == req.app_data::<Authorization>().unwrap().token
+    fn check(&self, ctx: &GuardContext) -> bool {
+        match ctx.app_data::<Data<Authorization>>() {
+            Some(app_data_authorization) => {
+                match ctx.head().headers().get(http::header::AUTHORIZATION) {
+                    Some(token) => {
+                        let request_token = token.to_str().unwrap();
+                        let result =
+                            token.to_str().unwrap_or("undefined") == app_data_authorization.token;
+                        if !result {
+                            info!("Authorization token {} is invalid", request_token);
+                        }
+                        result
+                    }
+                    None => false,
+                }
             }
-            None => false,
+            None => panic!("No authorization token defined server-side, panicking now!"),
         }
     }
 }
