@@ -4,7 +4,7 @@ mod middleware;
 
 use actix_web::guard::{Guard, GuardContext};
 use actix_web::middleware::Logger;
-use actix_web::web::{self, get, post, Data};
+use actix_web::web::{get, post, Data};
 use actix_web::{http, main, App, HttpServer};
 use log::info;
 
@@ -47,7 +47,7 @@ async fn main() -> std::io::Result<()> {
                 )),
             }))
             .wrap(Logger::default())
-            .route("/", web::route().to(handlers::welcome))
+            .route("/", get().to(handlers::welcome))
             .route("/ping", get().to(handlers::ping))
             .route("/download", get().to(handlers::download))
             .route("/upload", get().to(handlers::upload))
