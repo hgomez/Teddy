@@ -36,6 +36,7 @@ async fn main() -> std::io::Result<()> {
     info!("Starting Teddy");
     let configuration = conf::load_config();
     let address = conf::get_address(&configuration);
+    info!("Listening on {}", address);
 
     HttpServer::new(move || {
         App::new()
