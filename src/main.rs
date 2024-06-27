@@ -1,11 +1,9 @@
 mod conf;
-mod handlers;
 mod guards;
+mod handlers;
 
 use actix_web::{main, middleware, web, App, HttpServer};
 use log::info;
-
-use base64::{engine::general_purpose, Engine as _};
 
 #[main]
 async fn main() -> std::io::Result<()> {
@@ -18,12 +16,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(guards::Authorization {
-                token: general_purpose::STANDARD.encode(&format!(
-                    "{}:{}",
-                    configuration.user, configuration.password
-                )),
-            }))
+            .app_data(web::Data::new(guards::Authorization::new(&configuration)))
             .wrap(middleware::Logger::default())
             .route("/", web::get().to(handlers::welcome))
             .route("/ping", web::get().to(handlers::ping))

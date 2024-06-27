@@ -1,9 +1,23 @@
 use actix_web::{guard, http, web};
+use base64::{engine::general_purpose, Engine as _};
 use log::info;
+
+use crate::conf::Configuration;
 
 #[derive(Clone)]
 pub struct Authorization {
     pub token: String,
+}
+
+impl Authorization {
+    pub fn new(configuration: &Configuration) -> Authorization {
+        Authorization {
+            token: general_purpose::STANDARD.encode(&format!(
+                "{}:{}",
+                configuration.user, configuration.password
+            )),
+        }
+    }
 }
 
 #[derive(Clone)]
