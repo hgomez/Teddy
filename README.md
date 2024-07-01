@@ -28,3 +28,6 @@ Configuration can be overwritten in `config.json`:
   "Password": "number1"
 }
 ```
+
+## Test
+Test with `cargo test`

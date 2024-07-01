@@ -1,4 +1,7 @@
-use failure::Error;
+use failure::{Error, Fail};
+use log::{info, warn};
+use serde::Deserialize;
+use serde_json::from_reader;
 use std::fs::File;
 use std::io::BufReader;
 
@@ -8,19 +11,19 @@ enum ConfigurationError {
     FileNotFound,
     #[fail(display = "error parsing configuration file")]
     ParsingError {
-        #[cause] cause: Error
-    }
+        #[cause]
+        cause: Error,
+    },
 }
 
-
 #[derive(Deserialize, Clone)]
-pub struct Configuration{
+pub struct Configuration {
     #[serde(default = "Configuration::default_host")]
     pub host: String,
     #[serde(default = "Configuration::default_port")]
     pub port: u16,
-    pub user:String,
-    pub password: String
+    pub user: String,
+    pub password: String,
 }
 
 impl Default for Configuration {
@@ -29,7 +32,7 @@ impl Default for Configuration {
             host: Configuration::default_host(),
             port: Configuration::default_port(),
             user: String::from("teddy"),
-            password: String::from("rocks")
+            password: String::from("rocks"),
         }
     }
 }
@@ -49,7 +52,11 @@ const CONFIG_PATH: &'static str = "config.json";
 pub fn load_config() -> Configuration {
     match File::open(CONFIG_PATH)
         .map_err(|_| ConfigurationError::FileNotFound.into())
-        .and_then(|file| parse_configuration(file).map_err(|cause| ConfigurationError::ParsingError{ cause: cause.into() })) {
+        .and_then(|file| {
+            parse_configuration(file).map_err(|cause| ConfigurationError::ParsingError {
+                cause: cause.into(),
+            })
+        }) {
         Ok(configuration) => configuration,
         Err(error) => {
             warn!("Error loading configuration : {}", error);
@@ -61,7 +68,7 @@ pub fn load_config() -> Configuration {
 
 fn parse_configuration(file: File) -> Result<Configuration, Error> {
     let reader = BufReader::new(file);
-    let result: Configuration = serde_json::from_reader(reader)?;
+    let result: Configuration = from_reader(reader)?;
     Ok(result)
 }
 
