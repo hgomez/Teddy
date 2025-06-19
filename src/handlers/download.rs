@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct DownloadQueryParams {
-    filename: String
+    filename: String,
 }
 
 pub async fn handler(params: web::Query<DownloadQueryParams>) -> Result<NamedFile> {
@@ -22,7 +22,10 @@ mod tests {
 
     #[actix_web::test]
     async fn test_download() {
-        let req = TestRequest::default().method(Method::POST).uri("/?filename=README.md").to_request();
+        let req = TestRequest::default()
+            .method(Method::POST)
+            .uri("/?filename=README.md")
+            .to_request();
         let test_app = test::init_service(App::new().route("/", web::post().to(handler))).await;
 
         let response = test::call_and_read_body(&test_app, req).await;

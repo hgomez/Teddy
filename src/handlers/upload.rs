@@ -9,8 +9,9 @@ pub struct UploadForm {
 
 pub async fn handler(MultipartForm(form): MultipartForm<UploadForm>) -> HttpResponse {
     HttpResponse::Ok().body(format!(
-            "Uploaded file {}, with size: {}",
-            form.uploaded_file.file_name.expect("Should have a name"), form.uploaded_file.size
+        "Uploaded file {}, with size: {}",
+        form.uploaded_file.file_name.expect("Should have a name"),
+        form.uploaded_file.size
     ))
 }
 
@@ -36,15 +37,14 @@ mod tests {
 
         let req = TestRequest::default().method(Method::POST);
 
-            // merge header map into existing test request and set multipart body
-            let req = headers
+        // merge header map into existing test request and set multipart body
+        let req = headers
             .into_iter()
             .fold(req, |req, hdr| req.insert_header(hdr))
             .set_payload(body)
             .to_request();
 
         let test_app = test::init_service(App::new().route("/", web::post().to(handler))).await;
-
 
         let response = test::call_and_read_body(&test_app, req).await;
         assert!(find(&response, b"Uploaded file lorem.txt, with size: 12").is_some());
