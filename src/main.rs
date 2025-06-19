@@ -23,7 +23,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/admin")
                     .guard(guards::AuthorizationGuard)
-                    .route("/download", web::get().to(handlers::download::handler))
+                    .route("/download", web::post().to(handlers::download::handler))
                     .route("/upload", web::post().to(handlers::upload::handler))
                     .route("/exec", web::post().to(handlers::execute::handler)),
             )
