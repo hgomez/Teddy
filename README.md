@@ -29,8 +29,8 @@ Configuration can be overwritten in `config.json`:
 {
   "Host": "0.0.0.0",
   "Port": "7000",
-  "User": "SonarSource",
-  "Password": "number1"
+  "User": "teddybear",
+  "Password": "ilovehoney"
 }
 ```
 
