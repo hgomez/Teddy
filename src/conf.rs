@@ -1,18 +1,19 @@
-use failure::{Error, Fail};
+use thiserror::Error;
 use log::{info, warn};
 use serde::Deserialize;
 use serde_json::from_reader;
 use std::fs::File;
 use std::io::BufReader;
 
-#[derive(Debug, Fail)]
-enum ConfigurationError {
-    #[fail(display = "configuration file not found")]
+#[derive(Debug, Error)]
+pub enum ConfigurationError {
+    #[error("configuration file not found")]
     FileNotFound,
-    #[fail(display = "error parsing configuration file")]
+
+    #[error("error parsing configuration file")]
     ParsingError {
-        #[cause]
-        cause: Error,
+        #[from]
+        source: serde_json::Error, // On utilise directement l'erreur de serde_json
     },
 }
 
@@ -51,11 +52,10 @@ const CONFIG_PATH: &'static str = "config.json";
 
 pub fn load_config() -> Configuration {
     match File::open(CONFIG_PATH)
-        .map_err(|_| ConfigurationError::FileNotFound.into())
+        .map_err(|_| ConfigurationError::FileNotFound)
         .and_then(|file| {
-            parse_configuration(file).map_err(|cause| ConfigurationError::ParsingError {
-                cause: cause.into(),
-            })
+            // Ici, parse_configuration renvoie déjà une ConfigurationError
+            parse_configuration(file)
         }) {
         Ok(configuration) => configuration,
         Err(error) => {
@@ -66,8 +66,10 @@ pub fn load_config() -> Configuration {
     }
 }
 
-fn parse_configuration(file: File) -> Result<Configuration, Error> {
+// Changement ici : on retourne ConfigurationError au lieu du type inexistant Error
+fn parse_configuration(file: File) -> Result<Configuration, ConfigurationError> {
     let reader = BufReader::new(file);
+    // L'opérateur ? convertit automatiquement serde_json::Error vers ConfigurationError::ParsingError
     let result: Configuration = from_reader(reader)?;
     Ok(result)
 }
