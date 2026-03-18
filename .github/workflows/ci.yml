@@ -10,14 +10,23 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # Job 1 : Compilation, Tests et Formatage
   build_and_test:
-    name: Build & Test
+    name: Build, Test & Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Rust cache
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust Cache
         uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
       - name: Build
         run: cargo build --verbose
@@ -25,12 +34,16 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
+      - name: Lint with Clippy
+        run: cargo clippy -- -D warnings
+
+  # Job 2 : Audit de sécurité (indépendant pour plus de clarté)
   security_audit:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Security Audit
+      - name: Rustsec Audit
         uses: rustsec/audit-check@v1.4.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
