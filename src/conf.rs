@@ -48,7 +48,7 @@ impl Configuration {
     }
 }
 
-const CONFIG_PATH: &'static str = "config.json";
+const CONFIG_PATH: &str = "config.json";
 
 pub fn load_config() -> Configuration {
     match File::open(CONFIG_PATH)

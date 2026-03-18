@@ -12,7 +12,7 @@ pub struct Authorization {
 impl Authorization {
     pub fn new(configuration: &Configuration) -> Authorization {
         Authorization {
-            token: general_purpose::STANDARD.encode(&format!(
+            token: general_purpose::STANDARD.encode(format!(
                 "{}:{}",
                 configuration.user, configuration.password
             )),
