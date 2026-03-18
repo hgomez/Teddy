@@ -1,9 +1,9 @@
-use thiserror::Error;
 use log::{info, warn};
 use serde::Deserialize;
 use serde_json::from_reader;
 use std::fs::File;
 use std::io::BufReader;
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum ConfigurationError {
