@@ -9,7 +9,7 @@ use metrics_exporter_prometheus::PrometheusBuilder;
 
 #[main]
 async fn main() -> std::io::Result<()> {
-    let metrics = ActixWebMetricsBuilder::new().build().unwrap();
+    let metrics = ActixWebMetricsBuilder::new().build();
     // Install Prometheus exporter to read ActixWebMetricsBuilder data
     PrometheusBuilder::new().install().unwrap();
 
