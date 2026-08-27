@@ -44,6 +44,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Rustsec Audit
-        uses: rustsec/audit-check@v1.4.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit
