@@ -1,0 +1,5 @@
+[advisories]
+ignore = [
+    "RUSTSEC-2026-0258" # h2 0.3.x set by actix-http v3 (DoS empty DATA frames) - see https://github.com/actix/actix-web/issues/4199
+]
+
