@@ -1,12 +1,12 @@
 version: 2
 updates:
-  - package-ecosystem: "cargo" # Spécifique à Rust
+  - package-ecosystem: "cargo" # Rust-specific
     directory: "/"
     schedule:
-      interval: "weekly"     # Une fois par semaine suffit pour ne pas être spammé
-    open-pull-requests-limit: 5 # Évite d'avoir 50 PR d'un coup
+      interval: "weekly"     # Weekly is enough to avoid PR spam
+    open-pull-requests-limit: 5 # Avoids 50 open PRs at once
     groups:
-      rust-dependencies:     # Regroupe les petites mises à jour en une seule PR
+      rust-dependencies:     # Bundles small updates into a single PR
         patterns:
           - "*"
     labels:

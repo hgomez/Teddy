@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  # Job 1 : Compilation, Tests et Formatage
+  # Job 1: build, tests and formatting
   build_and_test:
     name: Build, Test & Lint
     runs-on: ubuntu-latest
@@ -24,8 +24,8 @@ jobs:
           persist-credentials: false
 
       - name: Setup Rust toolchain
-        # rustup est préinstallé sur les runners GitHub-hosted ; pas besoin d'une
-        # action tierce qui téléchargerait la toolchain depuis une source mutable
+        # rustup is preinstalled on GitHub-hosted runners; no need for a
+        # third-party action that would download the toolchain from a mutable source
         run: |
           rustup toolchain install stable --profile minimal --component rustfmt,clippy
           rustup default stable
@@ -45,7 +45,7 @@ jobs:
       - name: Lint with Clippy
         run: cargo clippy -- -D warnings
 
-  # Job 2 : Audit de sécurité (indépendant pour plus de clarté)
+  # Job 2: security audit (independent job for clarity)
   security_audit:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -56,13 +56,13 @@ jobs:
       - name: Install cargo-audit
         run: cargo install cargo-audit --locked
       - name: Rustsec Audit
-        # Les ignores sont déclarés dans .cargo/audit.toml (emplacement lu par cargo-audit >= 0.22)
+        # Ignores live in .cargo/audit.toml (the location read by cargo-audit >= 0.22)
         run: cargo audit
 
-  # Job 3 : Porte de sécurité CI/CD (plumber)
-  # Le binaire est épinglé sur la dernière release : version + checksum SHA256
-  # officiel. Toute nouvelle release plumber doit être répercutée ici.
-  # Voir docs/DECISIONS.md (D-006).
+  # Job 3: CI/CD security gate (plumber)
+  # The binary is pinned to the latest release: version + official SHA256
+  # checksum. Every new plumber release must be reflected here.
+  # See docs/DECISIONS.md (D-006).
   plumber:
     name: CI/CD Security Gate (plumber)
     runs-on: ubuntu-latest
@@ -82,6 +82,6 @@ jobs:
           plumber version
       - name: Plumber analyze
         env:
-          # Token en lecture seule, contrôlé par le bloc permissions du workflow
+          # Read-only token, scoped by the workflow-level permissions block
           GH_TOKEN: ${{ github.token }}
         run: plumber analyze

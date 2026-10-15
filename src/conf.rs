@@ -54,7 +54,7 @@ pub fn load_config() -> Configuration {
     match File::open(CONFIG_PATH)
         .map_err(|_| ConfigurationError::FileNotFound)
         .and_then(|file| {
-            // Ici, parse_configuration renvoie déjà une ConfigurationError
+            // Here, parse_configuration already returns a ConfigurationError
             parse_configuration(file)
         }) {
         Ok(configuration) => configuration,
@@ -66,10 +66,10 @@ pub fn load_config() -> Configuration {
     }
 }
 
-// Changement ici : on retourne ConfigurationError au lieu du type inexistant Error
+// Changed here: return a ConfigurationError instead of the previously non-existent Error type
 fn parse_configuration(file: File) -> Result<Configuration, ConfigurationError> {
     let reader = BufReader::new(file);
-    // L'opérateur ? convertit automatiquement serde_json::Error vers ConfigurationError::ParsingError
+    // The ? operator automatically converts serde_json::Error into ConfigurationError::ParsingError
     let result: Configuration = from_reader(reader)?;
     Ok(result)
 }
