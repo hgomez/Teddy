@@ -1,4 +1,4 @@
-![Teddy Temp Logo](https://seeklogo.com/images/T/teddy-killerz-logo-C525D81288-seeklogo.com.png)
+![Teddy Temp Logo](https://github.com/hgomez/Teddy/TeddyBears4Ever.jpg)
 
 # Teddy
 
