@@ -35,7 +35,7 @@ All five must pass. A commit that fails any of them will be rejected by CI (`.gi
 - `.mise.toml` — pinned version for local runs (`mise install`)
 - `.github/workflows/ci.yml` (`plumber` job) — pinned version **and** the official SHA256 checksum of the binary, verified before execution
 
-When a new plumber release is published, bump both together (release notes: https://github.com/getplumber/plumber/releases), then re-run `plumber analyze` — a new version may introduce new controls and new findings.
+This is **enforced automatically**: a daily scheduled job (`plumber_version_check`) fails when the pins are outdated or inconsistent with each other. On such a failure, bump both places together (release notes: https://github.com/getplumber/plumber/releases), then re-run `plumber analyze` — a new version may introduce new controls and new findings.
 
 ## Structure
 
@@ -54,7 +54,7 @@ When a new plumber release is published, bump both together (release notes: http
 ## Gotchas
 
 - **cargo-audit ignores** live in `.cargo/audit.toml` (NOT root `audit.toml`, NOT `Cargo.toml` — cargo-audit 0.22+ only reads `.cargo/audit.toml`). See `docs/DECISIONS.md`.
-- **plumber version** is pinned in TWO places that must be bumped together: `.mise.toml` and the `plumber` job in `.github/workflows/ci.yml` (version + SHA256 checksum). See `docs/DECISIONS.md` (D-006).
+- **plumber version** is pinned in TWO places that must be bumped together: `.mise.toml` and the `plumber` job in `.github/workflows/ci.yml` (version + SHA256 checksum). A daily scheduled CI job fails when the pin is no longer the latest release. See `docs/DECISIONS.md` (D-006).
 - `README.md` is partially outdated: config keys are lowercase (`host`, `port`, `user`, `password`) with defaults `teddy`/`rocks`; default port is 3000.
 - `/admin/exec` passes `parameters` as a single argument (no shell, no multi-args) — do not change semantics without updating `docs/DECISIONS.md`.
 - RUSTSEC-2026-0258 (h2, via actix-http v3) is ignored on purpose. Re-evaluate when actix-web upgrades to h2 0.4+.

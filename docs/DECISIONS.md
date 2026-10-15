@@ -15,9 +15,10 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
   - `.mise.toml` — pins the version for every contributor/agent locally (`mise install`).
   - `.github/workflows/ci.yml` (`plumber` job) — pins the version **and** the official SHA256 checksum from the release's `checksums.txt`, verified with `sha256sum --check` before the binary is executed. No third-party install action, no `curl | bash`.
 - A CI job runs `plumber analyze` (with `GH_TOKEN` = read-only `github.token`) on every push/PR, as part of the validation gate.
-- Update process: on each new plumber release, bump version + checksum in both places, re-run `plumber analyze`, and fix any new findings (never waive them).
+- Staleness is **detected automatically**: a daily scheduled job (`plumber_version_check`, cron 06:00 UTC) compares the pins in `ci.yml` and `.mise.toml` against the latest GitHub release, fails on any mismatch, and points to the exact files to update. The full CI also re-runs daily via the same schedule.
+- Update process: when `plumber_version_check` fails, bump version + checksum in both places, re-run `plumber analyze`, and fix any new findings (never waive them).
 
-**Consequences:** Deterministic, checksum-verified analysis in CI and locally, always on the latest controls. Known cost: the pin must be manually bumped on each release (no Dependabot coverage for this pattern); a stale pin is visible by comparing the CI job's `PLUMBER_VERSION` against the latest GitHub release.
+**Consequences:** Deterministic, checksum-verified analysis in CI and locally, always on the latest controls. A new plumber release makes the daily `plumber_version_check` job fail within 24h, so a stale pin cannot go unnoticed. Known cost: the bump itself remains manual (no Dependabot coverage for this pattern); full CI runs daily on the default branch in addition to push/PR runs.
 
 ---
 

@@ -5,6 +5,9 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
+  schedule:
+    # Daily: fail when the plumber pin is no longer the latest release
+    - cron: "0 6 * * *"
 
 env:
   CARGO_TERM_COLOR: always
@@ -85,3 +88,32 @@ jobs:
           # Read-only token, scoped by the workflow-level permissions block
           GH_TOKEN: ${{ github.token }}
         run: plumber analyze
+
+  # Job 4: ensure the plumber pin always tracks the latest release.
+  # Runs on a daily schedule and fails when a new plumber release is out,
+  # forcing the pin bump (see docs/DECISIONS.md, D-006).
+  plumber_version_check:
+    name: Plumber pin is the latest release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Compare pinned version with the latest plumber release
+        run: |
+          PINNED_CI="$(grep -oP 'PLUMBER_VERSION: \Kv[0-9.]+' .github/workflows/ci.yml | head -1)"
+          PINNED_MISE="$(grep -oP '"github:getplumber/plumber" = "\K[0-9.]+' .mise.toml)"
+          LATEST="$(curl -fsSL https://api.github.com/repos/getplumber/plumber/releases/latest | jq -r .tag_name)"
+          echo "pinned in ci.yml : ${PINNED_CI}"
+          echo "pinned in .mise.toml: v${PINNED_MISE}"
+          echo "latest release   : ${LATEST}"
+          if [ "${PINNED_CI}" != "v${PINNED_MISE}" ]; then
+            echo "::error::Plumber pins are inconsistent: ci.yml has ${PINNED_CI} but .mise.toml has v${PINNED_MISE}. They must be bumped together (see docs/DECISIONS.md, D-006)."
+            exit 1
+          fi
+          if [ "${PINNED_CI}" != "${LATEST}" ]; then
+            echo "::error::Plumber pin is outdated: pinned ${PINNED_CI}, latest release ${LATEST}."
+            echo "::error::Bump PLUMBER_VERSION + PLUMBER_SHA256 in .github/workflows/ci.yml and the version in .mise.toml, then re-run 'plumber analyze' and fix any new findings."
+            exit 1
+          fi
+          echo "Plumber pin is up to date (${PINNED_CI})."
