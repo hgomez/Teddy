@@ -4,12 +4,20 @@ Sources for the `teddy` package (standard debhelper `debian/` tree).
 
 ## Structure
 
-- `debian/control` — metadata and `Build-Depends` (`debhelper-compat 13`, `cargo`, `rustc >= 1.85`)
+- `debian/control` — metadata and `Build-Depends` (`debhelper-compat 13`); the Rust toolchain is NOT a Build-Depend: the locked crates require rustc >= 1.88 while trixie ships 1.85, so the toolchain is installed separately (see below)
 - `debian/rules` — the Rust build goes through `override_dh_auto_build` (`cargo build --release --locked`, same commands as the README); the systemd unit is installed but **neither enabled nor started** (`--no-enable --no-start`): credentials must be set first. Cargo downloads the crates pinned in `Cargo.lock` from crates.io at build time, so the build host needs network access
 - `debian/install` — systemd unit, `deploy/config.json` → `/etc/teddy/config.json` (conffile), README
 - `debian/postinst` — creates the unprivileged `teddy` system user the unit runs as
 - `debian/changelog` — the package version is read from here; CI seds it from the git tag
 - `debian/copyright` — machine-readable DEP-5 format
+
+## Toolchain requirement
+
+The crates pinned in `Cargo.lock` require **rustc >= 1.88** (some require 1.88,
+several 1.86+); Debian trixie only ships rustc 1.85. Use rustup or an upstream
+toolchain tarball >= 1.88 (CI pins rust 1.99.0, checksum-verified, see
+`.github/workflows/release.yml`). The build runs whatever `cargo` is first in
+`PATH`.
 
 ## Build
 
