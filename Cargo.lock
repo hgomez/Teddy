@@ -247,9 +247,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web-metrics"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c505e9ee04e96594a2bcf8c85194470f3ac5c9fa92c954afeb4fcf3485dbd15b"
+checksum = "55c2ecc72a589ed45ca02ad7a7fc9ed9c4f5ce9a9cd43bc8aed9f48e74f9044f"
 dependencies = [
  "actix-web",
  "futures-core",
@@ -1861,9 +1861,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.151"
+version = "1.0.154"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
+checksum = "e7e9cc8b1b85264074fbcc02a88680c4096b1e47df8f739dceb03bf482f04bd6"
 dependencies = [
  "itoa",
  "memchr",
