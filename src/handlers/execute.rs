@@ -1,6 +1,6 @@
 use std::{env, ffi::OsString, process::Command};
 
-use actix_web::{error::ErrorInternalServerError, web::Json, Error, HttpResponse};
+use actix_web::{Error, HttpResponse, error::ErrorInternalServerError, web::Json};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -39,10 +39,10 @@ pub async fn handler(query: Json<CommandQuery>) -> Result<HttpResponse, Error> {
 mod tests {
     use super::*;
 
-    use actix_web::http::header::ContentType;
     use actix_web::http::Method;
+    use actix_web::http::header::ContentType;
     use actix_web::test::TestRequest;
-    use actix_web::{test, web, App};
+    use actix_web::{App, test, web};
     use memchr::memmem::find;
 
     #[actix_web::test]

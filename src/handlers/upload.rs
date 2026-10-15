@@ -1,4 +1,4 @@
-use actix_multipart::form::{tempfile::TempFile, MultipartForm};
+use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use actix_web::HttpResponse;
 
 #[derive(Debug, MultipartForm)]
@@ -22,7 +22,7 @@ mod tests {
 
     use actix_web::http::Method;
     use actix_web::test::TestRequest;
-    use actix_web::{test, web, App};
+    use actix_web::{App, test, web};
     use bytes::Bytes;
     use memchr::memmem::find;
 

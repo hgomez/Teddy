@@ -6,7 +6,7 @@ pub async fn handler() -> HttpResponse {
 
 #[cfg(test)]
 mod tests {
-    use actix_web::{http::header::ContentType, test, web, App};
+    use actix_web::{App, http::header::ContentType, test, web};
 
     use crate::handlers::welcome::handler;
 

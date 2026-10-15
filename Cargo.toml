@@ -6,7 +6,7 @@ authors = ["Jean-Denis Coffre",
             "Henri Gomez",
             "Francois Teychene",
 	    "Stephane Trebel"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 actix-files = "0.7"

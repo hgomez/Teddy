@@ -1,5 +1,5 @@
 use actix_files::NamedFile;
-use actix_web::{web, Result};
+use actix_web::{Result, web};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -17,7 +17,7 @@ mod tests {
 
     use actix_web::http::Method;
     use actix_web::test::TestRequest;
-    use actix_web::{test, web, App};
+    use actix_web::{App, test, web};
     use memchr::memmem::find;
 
     #[actix_web::test]

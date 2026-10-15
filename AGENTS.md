@@ -46,7 +46,7 @@ This is **enforced automatically**: a daily scheduled job (`plumber_version_chec
 
 ## Conventions
 
-- Rust edition 2021, formatting enforced by `cargo fmt`, warnings denied via clippy
+- Rust edition 2024, formatting enforced by `cargo fmt`, warnings denied via clippy
 - Error handling with `thiserror` for config errors
 - Tests live in the same file as the handler (`#[cfg(test)]` + `actix_web::test`)
 - Commit messages: conventional style (`fix:`, `feat:`, ...)

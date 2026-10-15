@@ -2,7 +2,7 @@ mod conf;
 mod guards;
 mod handlers;
 
-use actix_web::{main, middleware, web, App, HttpServer};
+use actix_web::{App, HttpServer, main, middleware, web};
 use actix_web_metrics::ActixWebMetricsBuilder;
 use log::info;
 use metrics_exporter_prometheus::PrometheusBuilder;

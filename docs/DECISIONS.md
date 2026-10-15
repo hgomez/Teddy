@@ -4,6 +4,21 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
 
 ---
 
+## D-007 — Move to Rust edition 2024
+
+**Date:** 2026-10-15
+
+**Context:** The toolchain moved to Rust 1.99 with zero friction (full validation gate passed, see D-005/D-006 for the gate). Edition 2021 is still supported, but edition 2024 (stabilized in Rust 1.85) is the current default for new code and brings safer defaults (e.g. stricter closures/unsafe rules, updated `impl Trait` capture rules, style_edition 2024 import ordering in rustfmt).
+
+**Decision:**
+- Bump `Cargo.toml` to `edition = "2024"`.
+- `cargo fix --edition` reported no code changes required; the only mechanical impact was import reordering by rustfmt's 2024 style edition (applied via `cargo fmt --all`).
+- The validation gate (fmt, clippy `-D warnings`, test, audit, plumber) passes unchanged.
+
+**Consequences:** No behavior change; dependency and CI setup untouched (CI installs `stable`, which supports edition 2024). Contributors need a Rust toolchain >= 1.85 to build; contributors on older toolchains will get a clear edition error rather than a silent mismatch.
+
+---
+
 ## D-006 — Plumber runs pinned to the latest release, everywhere
 
 **Date:** 2026-10-15

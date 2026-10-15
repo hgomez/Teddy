@@ -63,7 +63,7 @@ Prometheus metrics are always exposed on **`:9000/metrics`**, regardless of the 
 
 ## Build
 
-Requires a [Rust](https://rustup.rs) toolchain (edition 2021).
+Requires a [Rust](https://rustup.rs) toolchain (edition 2024).
 
 ```sh
 cargo build

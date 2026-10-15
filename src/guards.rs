@@ -1,5 +1,5 @@
 use actix_web::{guard, http, web};
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 use log::info;
 
 use crate::conf::Configuration;
@@ -45,7 +45,7 @@ impl guard::Guard for AuthorizationGuard {
 
 #[cfg(test)]
 mod tests {
-    use actix_web::{http, test, web, App, HttpResponse};
+    use actix_web::{App, HttpResponse, http, test, web};
 
     #[actix_web::test]
     async fn authorization_guard() {
