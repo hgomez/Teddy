@@ -4,6 +4,24 @@ How releases are produced: everything is automated by GitHub Actions, the
 only human gesture is pushing a tag. This file documents the full flow, the
 artifacts, and the recovery procedures.
 
+## TL;DR
+
+```sh
+# 1. Bump the version in Cargo.toml (e.g. 2.1.4 -> 2.2.0), commit and push:
+git commit -am "chore: release 2.2.0" && git push
+#    -> check CI is green on main: gh run list --branch main --limit 3
+
+# 2. Tag and push the tag:
+git tag -a v2.2.0 -m "2.2.0" && git push origin v2.2.0
+#    or in one step (creates tag + release on GitHub):
+#    gh release create v2.2.0 --title v2.2.0 --generate-notes
+```
+
+That's it: the `verify`, `binaries`, `deb`, `rpm` and `release` jobs produce
+and publish the binaries, the `.deb` and the `.rpm` automatically.
+The only manual step is the `Cargo.toml` bump — `verify` rejects any tag
+that does not match it.
+
 ## The pipeline at a glance
 
 `.github/workflows/release.yml` triggers on pushing a tag matching `v*`.
