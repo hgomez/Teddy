@@ -36,10 +36,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (node24)
         with:
           persist-credentials: false
-      - name: Install the arm64 cross linker
+      - name: Install the arm64 cross toolchain
+        # libc6-dev-arm64-cross provides the target libc headers (the cross
+        # gcc alone only Recommends it; without it, C crates like zstd-sys
+        # pick up the host x86_64 headers and fail on bits/libc-header-start.h)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu
+          sudo apt-get install -y --no-install-recommends \
+            gcc-aarch64-linux-gnu libc6-dev-arm64-cross
       - name: Add the arm64 rust target
         run: rustup target add aarch64-unknown-linux-gnu
       - name: Build release binaries
