@@ -58,3 +58,30 @@ jobs:
       - name: Rustsec Audit
         # Les ignores sont déclarés dans .cargo/audit.toml (emplacement lu par cargo-audit >= 0.22)
         run: cargo audit
+
+  # Job 3 : Porte de sécurité CI/CD (plumber)
+  # Le binaire est épinglé sur la dernière release : version + checksum SHA256
+  # officiel. Toute nouvelle release plumber doit être répercutée ici.
+  # Voir docs/DECISIONS.md (D-006).
+  plumber:
+    name: CI/CD Security Gate (plumber)
+    runs-on: ubuntu-latest
+    env:
+      PLUMBER_VERSION: v0.6.3
+      PLUMBER_SHA256: ca601a5e17e69487cbfdc01aeb073f54ec32414b14dd79ce236baf5ab2be5192
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install plumber (pinned)
+        run: |
+          curl -fsSL -o /tmp/plumber \
+            "https://github.com/getplumber/plumber/releases/download/${PLUMBER_VERSION}/plumber-linux-amd64"
+          echo "${PLUMBER_SHA256}  /tmp/plumber" | sha256sum --check --strict
+          install -m 0755 /tmp/plumber /usr/local/bin/plumber
+          plumber version
+      - name: Plumber analyze
+        env:
+          # Token en lecture seule, contrôlé par le bloc permissions du workflow
+          GH_TOKEN: ${{ github.token }}
+        run: plumber analyze

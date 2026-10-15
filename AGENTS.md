@@ -20,11 +20,22 @@ cargo fmt --all -- --check
 cargo clippy -- -D warnings
 cargo test
 cargo audit
+plumber analyze
 ```
 
-All four must pass. A commit that fails any of them will be rejected by CI (`.github/workflows/ci.yml`):
+All five must pass. A commit that fails any of them will be rejected by CI (`.github/workflows/ci.yml`):
 - `cargo fmt` / `cargo clippy` are blocking jobs — code style and warnings are non-negotiable
 - `cargo audit` is a blocking job — a new RUSTSEC advisory must be either fixed (dependency update) or explicitly ignored in `.cargo/audit.toml` with a new entry in `docs/DECISIONS.md` explaining why
+- `plumber analyze` is a blocking job — the CI/CD security gate (`.plumber.yaml` overlay) must score 100/100; any new finding must be fixed, not waived
+
+## Plumber version policy
+
+`plumber` (CI/CD security gate) must **always be pinned to the latest release**, in two places that move together:
+
+- `.mise.toml` — pinned version for local runs (`mise install`)
+- `.github/workflows/ci.yml` (`plumber` job) — pinned version **and** the official SHA256 checksum of the binary, verified before execution
+
+When a new plumber release is published, bump both together (release notes: https://github.com/getplumber/plumber/releases), then re-run `plumber analyze` — a new version may introduce new controls and new findings.
 
 ## Structure
 
@@ -43,6 +54,7 @@ All four must pass. A commit that fails any of them will be rejected by CI (`.gi
 ## Gotchas
 
 - **cargo-audit ignores** live in `.cargo/audit.toml` (NOT root `audit.toml`, NOT `Cargo.toml` — cargo-audit 0.22+ only reads `.cargo/audit.toml`). See `docs/DECISIONS.md`.
+- **plumber version** is pinned in TWO places that must be bumped together: `.mise.toml` and the `plumber` job in `.github/workflows/ci.yml` (version + SHA256 checksum). See `docs/DECISIONS.md` (D-006).
 - `README.md` is partially outdated: config keys are lowercase (`host`, `port`, `user`, `password`) with defaults `teddy`/`rocks`; default port is 3000.
 - `/admin/exec` passes `parameters` as a single argument (no shell, no multi-args) — do not change semantics without updating `docs/DECISIONS.md`.
 - RUSTSEC-2026-0258 (h2, via actix-http v3) is ignored on purpose. Re-evaluate when actix-web upgrades to h2 0.4+.

@@ -4,6 +4,23 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
 
 ---
 
+## D-006 — Plumber runs pinned to the latest release, everywhere
+
+**Date:** 2026-10-15
+
+**Context:** Plumber is the CI/CD security gate (D-005). Its verdicts depend on the version: each release can add controls, so a stale plumber silently weakens the gate while an unpinned one makes runs non-reproducible. Both failure modes had to be excluded.
+
+**Decision:**
+- Plumber is **pinned to the latest release** (currently v0.6.3) in two places that must be bumped together:
+  - `.mise.toml` — pins the version for every contributor/agent locally (`mise install`).
+  - `.github/workflows/ci.yml` (`plumber` job) — pins the version **and** the official SHA256 checksum from the release's `checksums.txt`, verified with `sha256sum --check` before the binary is executed. No third-party install action, no `curl | bash`.
+- A CI job runs `plumber analyze` (with `GH_TOKEN` = read-only `github.token`) on every push/PR, as part of the validation gate.
+- Update process: on each new plumber release, bump version + checksum in both places, re-run `plumber analyze`, and fix any new findings (never waive them).
+
+**Consequences:** Deterministic, checksum-verified analysis in CI and locally, always on the latest controls. Known cost: the pin must be manually bumped on each release (no Dependabot coverage for this pattern); a stale pin is visible by comparing the CI job's `PLUMBER_VERSION` against the latest GitHub release.
+
+---
+
 ## D-005 — CI hardening: pinned actions, least-privilege token, plumber allowlist
 
 **Date:** 2026-10-15

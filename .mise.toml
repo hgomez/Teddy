@@ -1,0 +1,6 @@
+# Outils de développement épinglés pour ce repo
+# plumber : analyse de sécurité CI/CD — doit toujours être épinglé sur la
+# dernière release (même version que le job `plumber` de .github/workflows/ci.yml).
+# Voir docs/DECISIONS.md (D-006).
+[tools]
+"github:getplumber/plumber" = "0.6.3"
