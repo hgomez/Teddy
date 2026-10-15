@@ -77,7 +77,9 @@ All build jobs run in parallel after `verify`; `release` waits for
 
 ## Recovery procedures
 
-A release went wrong? Everything is reversible:
+A release went wrong? Everything is reversible (from any clone, add
+`-R hgomez/Teddy` to the `gh` commands, or run `gh repo set-default hgomez/Teddy`
+once):
 
 ```sh
 gh release delete v2.1.4 --yes          # remove the GitHub release
