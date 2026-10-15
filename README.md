@@ -4,6 +4,8 @@
   <p><em>The smart bear's agent</em></p>
 </div>
 
+[![Plumber Score](https://score.getplumber.io/github.com/hgomez/Teddy.svg)](https://score.getplumber.io/github.com/hgomez/Teddy)
+
 ---
 
 Teddy is a small agent daemon written in Rust ([Actix-web 4](https://actix.rs)) that can execute commands and upload/download files on a machine. Every operation is exposed through a simple REST API.

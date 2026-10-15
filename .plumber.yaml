@@ -1,17 +1,32 @@
-# Plumber overlay config. Inherits every control from Plumber's baseline;
-# you only write what you change. Run 'plumber config resolve' to see the
-# full effective config, or 'plumber config generate' for the commented template.
+# Plumber CI/CD security policy for Teddy.
+#
+# Overlay on the shipped baseline (extends: plumber:default): only the
+# controls that differ from the defaults are listed. `plumber config diff`
+# shows the effective deviation, `plumber config resolve` the full config.
 extends: plumber:default
-version: "2.0"
 
 github:
   controls:
+    # The third-party actions used in this repository's workflows are a
+    # deliberate, reviewed list: Swatinem/rust-cache (build cache, below the
+    # default 20k-stars floor, SHA-pinned in ci.yml — docs/DECISIONS.md D-005)
+    # and getplumber/plumber itself (the security scan, SHA-pinned and
+    # checksum- and attestation-verified by the action — docs/DECISIONS.md
+    # D-006). The default star-threshold/allowlist profile is therefore
+    # tightened to an explicit allowlist of exactly those two actions —
+    # anything else outside actions/* fails the gate.
     githubActionMustComeFromAuthorizedSources:
-      # Keep plumber's curated trusted orgs (actions/*, github/*, etc.)
-      includePlumberDefaults: true
+      enabled: true
+      trustGithubOfficialActions: true
+      trustSameOrgActions: true
+      minimumStars: 0
       trustedGithubActions:
-        # Swatinem/rust-cache: the de-facto standard Rust build cache action.
-        # Below the default minimumStars floor (20k), so explicitly trusted
-        # here — always referenced pinned to a commit SHA in ci.yml.
-        # See docs/DECISIONS.md (D-005).
         - Swatinem/rust-cache
+        - getplumber/plumber
+
+    # The "workflows must include required actions" control is an
+    # organisation-level policy (a universal action list does not exist);
+    # deliberately left disabled here, see the baseline comments.
+    workflowMustIncludeRequiredActions:
+      enabled: false
+      requiredGroups: []

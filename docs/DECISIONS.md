@@ -47,21 +47,20 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
 
 ---
 
-## D-006 — Plumber runs pinned to the latest release, everywhere
+## D-006 — Plumber: exact pin, enforced in CI by the official action
 
 **Date:** 2026-10-15
 
-**Context:** Plumber is the CI/CD security gate (D-005). Its verdicts depend on the version: each release can add controls, so a stale plumber silently weakens the gate while an unpinned one makes runs non-reproducible. Both failure modes had to be excluded.
+**Context:** Plumber is the CI/CD security gate (D-005). Its verdicts depend on the version: each release can add controls, so a stale plumber silently weakens the gate while an unpinned one makes runs non-reproducible. Both failure modes had to be excluded. The first iteration (manual curl + SHA256 checksum in `ci.yml`, daily `plumber_version_check` job forcing the bump) is superseded by this decision, which adopts the same strategy as ycast-go.
 
 **Decision:**
-- Plumber is **pinned to the latest release** (currently v0.6.3) in two places that must be bumped together:
-  - `.mise.toml` — pins the version for every contributor/agent locally (`mise install`).
-  - `.github/workflows/ci.yml` (`plumber` job) — pins the version **and** the official SHA256 checksum from the release's `checksums.txt`, verified with `sha256sum --check` before the binary is executed. No third-party install action, no `curl | bash`.
-- A CI job runs `plumber analyze` (with `GH_TOKEN` = read-only `github.token`) on every push/PR, as part of the validation gate.
-- Staleness is **detected automatically**: a daily scheduled job (`plumber_version_check`, cron 06:00 UTC) compares the pins in `ci.yml` and `.mise.toml` against the latest GitHub release, fails on any mismatch, and points to the exact files to update. The full CI also re-runs daily via the same schedule.
-- Update process: when `plumber_version_check` fails, bump version + checksum in both places, re-run `plumber analyze`, and fix any new findings (never waive them).
+- Plumber is **pinned to an exact version** (never `latest`) in `mise.toml` for local runs, and updated **manually** with `mise run update-plumber` (`scripts/update-plumber.sh`: reads the latest stable GitHub release, never downgrades, rewrites the pin).
+- The analysis runs in CI (`.github/workflows/plumber.yml`, its own workflow) through the **official** `getplumber/plumber` GitHub Action, SHA-pinned to the release matching the mise.toml pin. The action verifies the installed binary against the release `checksums.txt` and its SLSA build-provenance attestation.
+- CI is gated at `min-points: 100` (ANY finding fails the job) and `score-push: true` publishes the live Plumber Score badge shown in the README. The job is a required status check on `main`, so a pull request that degrades the score cannot be merged.
+- The plumber action is **the deliberate third-party action** (alongside `Swatinem/rust-cache`, D-005) explicitly allowed in the `githubActionMustComeFromAuthorizedSources` overlay in `.plumber.yaml` — the policy tool polices its own dependency. The daily scheduled `plumber_version_check` job was removed on purpose: a pin bump must be a reviewed, deliberate change.
+- Update process: run `mise run update-plumber`, move the action SHA + version comment in `.github/workflows/plumber.yml` to the same release, validate the overlay with the new version (`plumber config validate` + `plumber analyze`), and fix any new findings (never waive them).
 
-**Consequences:** Deterministic, checksum-verified analysis in CI and locally, always on the latest controls. A new plumber release makes the daily `plumber_version_check` job fail within 24h, so a stale pin cannot go unnoticed. Known cost: the bump itself remains manual (no Dependabot coverage for this pattern); full CI runs daily on the default branch in addition to push/PR runs.
+**Consequences:** Deterministic, checksum- and attestation-verified analysis in CI and locally, with a monotonic score (a merge cannot lower it; a fix is needed to raise it). The pin can drift from upstream between manual updates — that is acceptable for a security gate that should only move on purpose. The cost of the strict gate — a new plumber release surfacing a new finding breaks the pin bump — is deliberate: it fails loudly, and the bump is validated manually before landing anyway.
 
 ---
 
@@ -75,7 +74,7 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
 - All actions in `.github/workflows/ci.yml` are pinned to full commit SHAs (with a version comment); Dependabot keeps the pins fresh.
 - Workflow-level `permissions: contents: read` (least privilege; no job needs more) and `persist-credentials: false` on every checkout.
 - `dtolnay/rust-toolchain` is replaced by a plain `rustup toolchain install` run step: the toolchain no longer arrives through a third-party action, which removed the HIGH attack path entirely.
-- `Swatinem/rust-cache` is kept (SHA-pinned) and explicitly trusted in a **minimal** `.plumber.yaml` overlay (`extends: plumber:default`) — it is below the default `minimumStars: 20000` floor. It must always stay SHA-pinned; removal of the allowlist entry or the pin fails the plumber gate.
+- `Swatinem/rust-cache` is kept (SHA-pinned) and explicitly trusted in a **minimal** `.plumber.yaml` overlay (`extends: plumber:default`) — it is below the default `minimumStars: 20000` floor. It must always stay SHA-pinned; removal of the allowlist entry or the pin fails the plumber gate. (Later tightened to an explicit allowlist of `Swatinem/rust-cache` + `getplumber/plumber` only, see D-006.)
 
 **Consequences:** `plumber analyze` now scores 100/100 (PASSED). The allowlist entry in `.plumber.yaml` and the pin in `ci.yml` must move together — if the action is ever swapped or unpinned, the decision must be revisited here.
 

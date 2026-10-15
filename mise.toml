@@ -1,2 +1,8 @@
 [tools]
 "github:getplumber/plumber" = "0.6.4"
+
+# Keep the plumber pin current: mise run update-plumber (manual; the pin is
+# not auto-updated — see docs/DECISIONS.md D-006).
+[tasks.update-plumber]
+description = "Pin mise.toml to the latest plumber release"
+run = "./scripts/update-plumber.sh"
