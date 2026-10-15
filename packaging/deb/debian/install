@@ -1,0 +1,3 @@
+deploy/teddy.service usr/lib/systemd/system/
+deploy/config.json etc/teddy/config.json
+README.md usr/share/doc/teddy/

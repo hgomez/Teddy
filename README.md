@@ -98,6 +98,16 @@ src/
     └── execute.rs
 ```
 
+## Packaging
+
+Native packages are produced by CI on every `v*` tag (see `RELEASING.md`):
+
+- **Debian** (`packaging/deb/`) — installs `/usr/bin/teddy`, `/etc/teddy/config.json` (conffile), the systemd unit and the docs; the unit is installed but **not enabled**: set strong credentials first
+- **RPM** (`packaging/rpm/`) — same layout for Fedora/RHEL/openSUSE
+- **Binaries** — `teddy-linux-amd64` and `teddy-linux-arm64` release builds
+
+Both package builds run `cargo build --release --locked` (crates fetched from crates.io, see each packaging README).
+
 ## Validation gate
 
 CI (`.github/workflows/ci.yml`) enforces the following checks on every commit — run them locally before pushing:

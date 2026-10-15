@@ -1,0 +1,9 @@
+#!/bin/sh
+# Create the unprivileged system user the unit runs as.
+set -e
+
+if ! getent passwd teddy >/dev/null 2>&1; then
+    adduser --system --group --home /nonexistent --no-create-home teddy
+fi
+
+#DEBHELPER#

@@ -1,0 +1,27 @@
+[Unit]
+Description=Teddy agent daemon (REST API for exec, file upload/download)
+Documentation=https://github.com/hgomez/Teddy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=teddy
+Group=teddy
+# Teddy reads config.json from its working directory
+WorkingDirectory=/etc/teddy
+ExecStart=/usr/bin/teddy
+Restart=on-failure
+RestartSec=5
+
+# Hardening: Teddy only needs to read its config and listen on its port
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

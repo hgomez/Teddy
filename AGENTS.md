@@ -43,6 +43,10 @@ This is **enforced automatically**: a daily scheduled job (`plumber_version_chec
 - `src/conf.rs` — configuration from `config.json` (optional, defaults in code)
 - `src/guards.rs` — auth guard: `Authorization` header must equal Base64(`user:password`)
 - `src/handlers/` — one module per endpoint (`welcome`, `ping`, `download`, `upload`, `execute`)
+- `deploy/` — systemd unit (`teddy.service`) and example `config.json`
+- `packaging/` — native packages: `deb/` (debian/ tree), `rpm/` (spec file)
+- `.github/workflows/` — `ci.yml` (validation gate) and `release.yml` (tag-triggered packaging + release)
+- `build.sh` — release binaries into `dist/` (host or cross-compiled)
 
 ## Conventions
 

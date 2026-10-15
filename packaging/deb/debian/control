@@ -1,0 +1,30 @@
+Source: teddy
+Section: net
+Priority: optional
+Maintainer: Teddy maintainers <teddy@localhost>
+Build-Depends:
+ debhelper-compat (= 13),
+ cargo,
+ rustc (>= 1.85~),
+Standards-Version: 4.6.2
+Homepage: https://github.com/hgomez/Teddy
+Rules-Requires-Root: no
+Vcs-Browser: https://github.com/hgomez/Teddy
+Vcs-Git: https://github.com/hgomez/Teddy.git
+
+Package: teddy
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: agent daemon exposing a REST API to exec commands and transfer files
+ Teddy is a small agent daemon written in Rust (Actix-web 4), deployable on
+ Linux, macOS and Windows. It exposes a REST API to execute a command
+ (single command, no shell), upload files via multipart form (up to 100 MB)
+ and download files from the machine. Prometheus metrics are exposed on a
+ dedicated port (:9000/metrics).
+ .
+ The /admin/* endpoints are protected by an Authorization header equal to
+ Base64(user:password). Configuration lives in /etc/teddy/config.json
+ (optional: sane defaults are built in). The systemd unit is installed but
+ not enabled: set strong credentials in /etc/teddy/config.json first, then
+ run "systemctl enable --now teddy". Never expose Teddy on an untrusted
+ network: it is a remote-execution agent by design.

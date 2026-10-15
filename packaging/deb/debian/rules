@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+# debian/rules for teddy. The build is done directly with the Rust toolchain
+# (no dh-cargo), so the build commands stay identical to the documented ones.
+# CI is expected to copy (or symlink) this debian/ directory at the top of
+# the source tree, then run dpkg-buildpackage -us -uc -b.
+#
+# Note: cargo downloads the crates pinned in Cargo.lock from crates.io at
+# build time (no vendoring in this repo); the build host needs network
+# access to crates.io.
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	rm -rf target dist
+
+override_dh_auto_build:
+	cargo build --release --locked
+
+override_dh_auto_test:
+	cargo test --locked
+
+override_dh_auto_install:
+	install -D -m 0755 target/release/teddy debian/teddy/usr/bin/teddy
+
+# The unit is installed but not enabled or started: the administrator must
+# set strong credentials in /etc/teddy/config.json first (default ones are
+# public knowledge, and Teddy is a remote-execution agent).
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start

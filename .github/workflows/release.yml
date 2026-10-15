@@ -1,0 +1,130 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  # Sanity check before anything gets built: the tag must match the version
+  # declared in Cargo.toml (the binary version comes from
+  # env!("CARGO_PKG_VERSION"), so tag and Cargo.toml must stay aligned).
+  verify:
+    name: Tag matches Cargo.toml version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Compare tag with Cargo.toml version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          CRATE="$(grep -m1 '^version' Cargo.toml | sed 's/version = "\(.*\)"/\1/')"
+          echo "tag=${TAG} Cargo.toml=${CRATE}"
+          [ "${TAG}" = "${CRATE}" ] || {
+            echo "::error::Tag v${TAG} does not match Cargo.toml version ${CRATE}. Bump Cargo.toml before tagging."
+            exit 1
+          }
+
+  binaries:
+    name: Binaries (amd64, arm64)
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install the arm64 cross linker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu
+      - name: Add the arm64 rust target
+        run: rustup target add aarch64-unknown-linux-gnu
+      - name: Build release binaries
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        run: ./build.sh x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: binaries
+          path: dist/teddy-linux-*
+
+  deb:
+    name: Debian package (amd64)
+    needs: verify
+    runs-on: ubuntu-latest
+    container: debian:trixie-20261005@sha256:913f6706df59a68922d1dd08f78c2476560a8d367897200a6005b00e5f67c2d5 # debian:trixie-20261005
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            git dpkg-dev debhelper build-essential cargo rustc
+      - name: Build the package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cp -r packaging/deb/debian .
+          sed -i "1s/teddy (.*)/teddy (${VERSION})/" debian/changelog
+          dpkg-buildpackage -us -uc -b
+          mkdir -p dist
+          mv ../teddy_*.deb dist/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: deb
+          path: dist/*.deb
+
+  rpm:
+    name: RPM package (x86_64)
+    needs: verify
+    runs-on: ubuntu-latest
+    container: fedora:44@sha256:43b29f65a41eb9c35e1cd5323e3bdf3b655c2357a9f4f1ff2f9c2798e5045d80 # fedora:44
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install build dependencies
+        run: dnf install -y cargo rust rpm-build git-core systemd-rpm-macros
+      - name: Build the package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^Version:        .*/Version:        ${VERSION}/" packaging/rpm/teddy.spec
+          rpmbuild_topdir="$PWD/rpmbuild"
+          mkdir -p "$rpmbuild_topdir"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          tar czf "$rpmbuild_topdir/SOURCES/teddy-${VERSION}.tar.gz" \
+              --transform "s,^,teddy-${VERSION}/," \
+              --exclude=.git --exclude=target --exclude=dist --exclude=rpmbuild .
+          cp packaging/rpm/teddy.spec "$rpmbuild_topdir/SPECS/"
+          rpmbuild -bb --define "_topdir $rpmbuild_topdir" \
+              "$rpmbuild_topdir/SPECS/teddy.spec"
+          mkdir -p dist
+          mv "$rpmbuild_topdir"/RPMS/*/*.rpm dist/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rpm
+          path: dist/*.rpm
+
+  release:
+    name: Publish release
+    needs: [binaries, deb, rpm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release and upload artifacts
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }} # no checkout in this job: gh needs the repo hint
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" --clobber \
+            artifacts/*.deb artifacts/*.rpm artifacts/teddy-linux-*

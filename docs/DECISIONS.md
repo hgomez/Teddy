@@ -4,6 +4,22 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
 
 ---
 
+## D-008 — Native Debian and RPM packaging, tag-triggered release pipeline
+
+**Date:** 2026-10-15
+
+**Context:** Teddy is a deployable agent; admins expect native packages (`.deb`/`.rpm`) and release binaries rather than a source-only repository. Pattern borrowed from the same maintainers' `hgomez/ycast-go` release pipeline, adapted to Rust.
+
+**Decision:**
+- `packaging/deb/` (debhelper 13 tree) and `packaging/rpm/` (spec) build the package from source with `cargo build --release --locked`; crates are fetched from crates.io (no vendoring — documented in both packaging READMEs). A `teddy` system user is created by the package scripts; the systemd unit (`deploy/teddy.service`, hardened) is installed in `/etc/teddy` working-directory mode but **never enabled or started**: the shipped `config.json` carries the public default credentials and Teddy is a remote-execution agent (D-001). `/etc/teddy/config.json` is a conffile / `%config(noreplace)`.
+- `.github/workflows/release.yml` triggers on `v*` tags: a `verify` job rejects any tag that does not match the `Cargo.toml` version (the binary version comes from `env!("CARGO_PKG_VERSION")`), then three parallel jobs produce `teddy-linux-{amd64,arm64}` binaries (`build.sh`, arm64 via the GNU cross linker), the `.deb` (debian:trixie container) and the `.rpm` (fedora:44 container); a final job publishes with the `gh` CLI.
+- Security posture identical to `ci.yml` (plumber gate): GitHub-owned actions only, pinned to SHAs; container images pinned by digest; `persist-credentials: false` everywhere; `contents: read` except `contents: write` on the release job; no third-party release action, no cache in the release path.
+- Licensing: packaging metadata declares **GPL-3.0-or-later**, mirroring ycast-go; the repository has no LICENSE file yet — adding one is pending a maintainer decision.
+
+**Consequences:** A release is `bump Cargo.toml → tag v<X> → push`, fully automated after that. The deb/rpm builds require network access to crates.io at build time (accepted trade-off vs. vendoring ~277 crates in git). Package version is stamped by CI `sed` from the tag, like ycast-go.
+
+---
+
 ## D-007 — Move to Rust edition 2024
 
 **Date:** 2026-10-15
