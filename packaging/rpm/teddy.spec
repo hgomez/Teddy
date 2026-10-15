@@ -18,7 +18,7 @@ Version:        2.1.4
 Release:        1%{?dist}
 Summary:        Agent daemon exposing a REST API to exec commands and transfer files
 
-License:        GPL-3.0-or-later
+License:        Apache-2.0
 URL:            https://github.com/hgomez/Teddy
 Source0:        %{name}-%{version}.tar.gz
 
@@ -54,12 +54,14 @@ install -D -m 0755 target/release/teddy %{buildroot}%{_bindir}/teddy
 install -D -m 0640 deploy/config.json    %{buildroot}%{_sysconfdir}/teddy/config.json
 install -D -m 0644 deploy/teddy.service  %{buildroot}%{_unitdir}/teddy.service
 install -D -m 0644 README.md             %{buildroot}%{_pkgdocdir}/README.md
+install -D -m 0644 LICENSE               %{buildroot}%{_licensedir}/%{name}-%{version}/LICENSE
 
 %pre
 getent passwd teddy >/dev/null || useradd -r -d /nonexistent -s /sbin/nologin \
     -c "Teddy agent daemon" teddy
 
 %files
+%license %{_licensedir}/%{name}-%{version}/LICENSE
 %{_bindir}/teddy
 %config(noreplace) %attr(0640,root,teddy) %{_sysconfdir}/teddy/config.json
 %{_unitdir}/teddy.service

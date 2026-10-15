@@ -1,3 +1,4 @@
 deploy/teddy.service usr/lib/systemd/system/
 deploy/config.json etc/teddy/
 README.md usr/share/doc/teddy/
+LICENSE usr/share/doc/teddy/

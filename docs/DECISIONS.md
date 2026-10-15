@@ -4,6 +4,18 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
 
 ---
 
+## D-009 — Adopt the Apache License 2.0
+
+**Date:** 2026-10-15
+
+**Context:** The repository had no LICENSE file; the packaging metadata provisionally declared GPL-3.0-or-later (mirroring ycast-go), pending a maintainer decision (flagged in D-008).
+
+**Decision:** Teddy is released under the **Apache License 2.0** (`LICENSE` at the repo root, `license = "Apache-2.0"` in `Cargo.toml`, rpm `License: Apache-2.0` with the file shipped as `%license`, deb copyright in DEP-5 format referencing the shipped text).
+
+**Consequences:** Permissive licensing compatible with all dependencies; the GPL-3.0 mention in earlier packaging drafts is obsolete. Any future dependency must remain Apache-2.0-compatible (it is a superset-compatible choice for typical MIT/BSD/Apache-2.0 deps; GPL-only dependencies would now be the ones to reject).
+
+---
+
 ## D-008 — Native Debian and RPM packaging, tag-triggered release pipeline
 
 **Date:** 2026-10-15
@@ -14,7 +26,7 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
 - `packaging/deb/` (debhelper 13 tree) and `packaging/rpm/` (spec) build the package from source with `cargo build --release --locked`; crates are fetched from crates.io (no vendoring — documented in both packaging READMEs). A `teddy` system user is created by the package scripts; the systemd unit (`deploy/teddy.service`, hardened) is installed in `/etc/teddy` working-directory mode but **never enabled or started**: the shipped `config.json` carries the public default credentials and Teddy is a remote-execution agent (D-001). `/etc/teddy/config.json` is a conffile / `%config(noreplace)`.
 - `.github/workflows/release.yml` triggers on `v*` tags: a `verify` job rejects any tag that does not match the `Cargo.toml` version (the binary version comes from `env!("CARGO_PKG_VERSION")`), then three parallel jobs produce `teddy-linux-{amd64,arm64}` binaries (`build.sh`, arm64 via the GNU cross linker), the `.deb` (debian:trixie container) and the `.rpm` (fedora:44 container); a final job publishes with the `gh` CLI.
 - Security posture identical to `ci.yml` (plumber gate): GitHub-owned actions only, pinned to SHAs; container images pinned by digest; `persist-credentials: false` everywhere; `contents: read` except `contents: write` on the release job; no third-party release action, no cache in the release path.
-- Licensing: packaging metadata declares **GPL-3.0-or-later**, mirroring ycast-go; the repository has no LICENSE file yet — adding one is pending a maintainer decision.
+- Licensing: packaging metadata declares **Apache-2.0** (see D-009); the repository carries a `LICENSE` file shipped as `%license` (rpm) and in `/usr/share/doc/teddy/` (deb).
 
 **Consequences:** A release is `bump Cargo.toml → tag v<X> → push`, fully automated after that. The deb/rpm builds require network access to crates.io at build time (accepted trade-off vs. vendoring ~277 crates in git). Package version is stamped by CI `sed` from the tag, like ycast-go.
 

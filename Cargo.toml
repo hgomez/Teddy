@@ -6,6 +6,7 @@ authors = ["Jean-Denis Coffre",
             "Henri Gomez",
             "Francois Teychene",
 	    "Stephane Trebel"]
+license = "Apache-2.0"
 edition = "2024"
 
 [dependencies]

@@ -122,3 +122,7 @@ cargo audit
 ## Security notice
 
 Teddy is a **remote-execution agent by design**: `/admin/exec` and `/admin/download` allow arbitrary commands and file reads. Never expose it on an untrusted network, always protect it with strong credentials, and never log or leak the `Authorization` token.
+
+## License
+
+Apache License 2.0 — see [LICENSE](LICENSE).
