@@ -20,9 +20,9 @@ jobs:
   # Job 1: build, tests and formatting
   build_and_test:
     name: Build, Test & Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (node24)
         with:
           persist-credentials: false
 
@@ -51,9 +51,9 @@ jobs:
   # Job 2: security audit (independent job for clarity)
   security_audit:
     name: Security Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (node24)
         with:
           persist-credentials: false
       - name: Install cargo-audit
@@ -68,12 +68,12 @@ jobs:
   # See docs/DECISIONS.md (D-006).
   plumber:
     name: CI/CD Security Gate (plumber)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       PLUMBER_VERSION: v0.6.3
       PLUMBER_SHA256: ca601a5e17e69487cbfdc01aeb073f54ec32414b14dd79ce236baf5ab2be5192
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (node24)
         with:
           persist-credentials: false
       - name: Install plumber (pinned)
@@ -94,9 +94,9 @@ jobs:
   # forcing the pin bump (see docs/DECISIONS.md, D-006).
   plumber_version_check:
     name: Plumber pin is the latest release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (node24)
         with:
           persist-credentials: false
       - name: Compare pinned version with the latest plumber release

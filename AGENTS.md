@@ -59,6 +59,7 @@ This is **enforced automatically**: a daily scheduled job (`plumber_version_chec
 
 - **cargo-audit ignores** live in `.cargo/audit.toml` (NOT root `audit.toml`, NOT `Cargo.toml` — cargo-audit 0.22+ only reads `.cargo/audit.toml`). See `docs/DECISIONS.md`.
 - **plumber version** is pinned in TWO places that must be bumped together: `.mise.toml` and the `plumber` job in `.github/workflows/ci.yml` (version + SHA256 checksum). A daily scheduled CI job fails when the pin is no longer the latest release. See `docs/DECISIONS.md` (D-006).
+- **runner label** is pinned to `ubuntu-24.04` (NOT `ubuntu-latest` — the label migrated to Ubuntu 26 on 2026-10-19 and must not be used). Keep GitHub actions on node24 versions (checkout v7+, upload-artifact v7+, download-artifact v8+), pinned by SHA.
 - `README.md` is partially outdated: config keys are lowercase (`host`, `port`, `user`, `password`) with defaults `teddy`/`rocks`; default port is 3000.
 - `/admin/exec` passes `parameters` as a single argument (no shell, no multi-args) — do not change semantics without updating `docs/DECISIONS.md`.
 - RUSTSEC-2026-0258 (h2, via actix-http v3) is ignored on purpose. Re-evaluate when actix-web upgrades to h2 0.4+.
