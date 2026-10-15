@@ -70,8 +70,8 @@ jobs:
     name: CI/CD Security Gate (plumber)
     runs-on: ubuntu-24.04
     env:
-      PLUMBER_VERSION: v0.6.3
-      PLUMBER_SHA256: ca601a5e17e69487cbfdc01aeb073f54ec32414b14dd79ce236baf5ab2be5192
+      PLUMBER_VERSION: v0.6.4
+      PLUMBER_SHA256: 92e1cb3a636ca0d1653ba8420053af6008f3af753a9d60739d002013a4cbeaeb
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (node24)
         with:

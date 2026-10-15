@@ -3,4 +3,4 @@
 # release (same version as the `plumber` job in .github/workflows/ci.yml).
 # See docs/DECISIONS.md (D-006).
 [tools]
-"github:getplumber/plumber" = "0.6.3"
+"github:getplumber/plumber" = "0.6.4"
