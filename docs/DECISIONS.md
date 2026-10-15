@@ -4,6 +4,22 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
 
 ---
 
+## D-005 — CI hardening: pinned actions, least-privilege token, plumber allowlist
+
+**Date:** 2026-10-15
+
+**Context:** `plumber analyze` scored the CI workflow 63/100 (FAILED): checkout persisted the `GITHUB_TOKEN` in `.git/config` (ISSUE-307), no explicit `permissions:` block so the token inherited the repo default scopes (ISSUE-801), and the third-party actions `dtolnay/rust-toolchain@stable` and `Swatinem/rust-cache@v2` were referenced by mutable refs (two HIGH attack paths).
+
+**Decision:**
+- All actions in `.github/workflows/ci.yml` are pinned to full commit SHAs (with a version comment); Dependabot keeps the pins fresh.
+- Workflow-level `permissions: contents: read` (least privilege; no job needs more) and `persist-credentials: false` on every checkout.
+- `dtolnay/rust-toolchain` is replaced by a plain `rustup toolchain install` run step: the toolchain no longer arrives through a third-party action, which removed the HIGH attack path entirely.
+- `Swatinem/rust-cache` is kept (SHA-pinned) and explicitly trusted in a **minimal** `.plumber.yaml` overlay (`extends: plumber:default`) — it is below the default `minimumStars: 20000` floor. It must always stay SHA-pinned; removal of the allowlist entry or the pin fails the plumber gate.
+
+**Consequences:** `plumber analyze` now scores 100/100 (PASSED). The allowlist entry in `.plumber.yaml` and the pin in `ci.yml` must move together — if the action is ever swapped or unpinned, the decision must be revisited here.
+
+---
+
 ## D-004 — Keep Actix-web 4 (framework evaluation)
 
 **Date:** 2026-10-15

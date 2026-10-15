@@ -1,0 +1,17 @@
+# Plumber overlay config. Inherits every control from Plumber's baseline;
+# you only write what you change. Run 'plumber config resolve' to see the
+# full effective config, or 'plumber config generate' for the commented template.
+extends: plumber:default
+version: "2.0"
+
+github:
+  controls:
+    githubActionMustComeFromAuthorizedSources:
+      # Keep plumber's curated trusted orgs (actions/*, github/*, etc.)
+      includePlumberDefaults: true
+      trustedGithubActions:
+        # Swatinem/rust-cache: the de-facto standard Rust build cache action.
+        # Below the default minimumStars floor (20k), so explicitly trusted
+        # here — always referenced pinned to a commit SHA in ci.yml.
+        # See docs/DECISIONS.md (D-005).
+        - Swatinem/rust-cache
