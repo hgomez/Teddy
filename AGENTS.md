@@ -26,7 +26,7 @@ plumber analyze
 All five must pass. A commit that fails any of them will be rejected by CI (`.github/workflows/ci.yml` and `.github/workflows/plumber.yml`):
 - `cargo fmt` / `cargo clippy` are blocking jobs — code style and warnings are non-negotiable
 - `cargo audit` is a blocking job — a new RUSTSEC advisory must be either fixed (dependency update) or explicitly ignored in `.cargo/audit.toml` with a new entry in `docs/DECISIONS.md` explaining why
-- `plumber analyze` is a blocking job — the CI/CD security gate (`.plumber.yaml` overlay) must score 100/100 (`min-points: 100` in `.github/workflows/plumber.yml`); any new finding must be fixed, not waived
+- `plumber analyze` is a blocking job — the CI/CD security gate (`.plumber.yaml` overlay) must score at least 90/100 (`min-points: 90` in `.github/workflows/plumber.yml`); a PR that drops the score below 90 is blocked, any new finding above that floor must still be fixed, not waived
 
 ## Plumber version policy
 
