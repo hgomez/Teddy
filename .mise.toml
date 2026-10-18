@@ -1,6 +1,0 @@
-# Pinned development tools for this repo
-# plumber: CI/CD security analysis — must always be pinned to the latest
-# release (same version as the `plumber` job in .github/workflows/ci.yml).
-# See docs/DECISIONS.md (D-006).
-[tools]
-"github:getplumber/plumber" = "0.6.4"
