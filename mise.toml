@@ -1,5 +1,5 @@
 [tools]
-"github:getplumber/plumber" = "0.7.2"
+"github:getplumber/plumber" = "0.7.17"
 
 # Keep the plumber pin current: mise run update-plumber (manual; the pin is
 # not auto-updated — see docs/DECISIONS.md D-006).
