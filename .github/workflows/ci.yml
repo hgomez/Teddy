@@ -25,10 +25,11 @@ jobs:
 
       - name: Setup Rust toolchain
         # rustup is preinstalled on GitHub-hosted runners; no need for a
-        # third-party action that would download the toolchain from a mutable source
+        # third-party action that would download the toolchain from a mutable source.
+        # Pinned version so CI matches the local toolchain and release builds.
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt,clippy
-          rustup default stable
+          rustup toolchain install 1.100 --profile minimal --component rustfmt,clippy
+          rustup default 1.100
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2

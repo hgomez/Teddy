@@ -4,6 +4,21 @@ Architectural and security decisions for Teddy, newest first. Each entry: date, 
 
 ---
 
+## D-010 — Ignore RUSTSEC-2026-0594 (cookie) until actix-web upgrades
+
+**Date:** 2026-11-24
+
+**Context:** `cargo audit` fails on RUSTSEC-2026-0594 (private cookie nonces can repeat in processes that fork, cookie 0.16.2, severity 6.5). The fix requires cookie >= 0.18.3, but actix-web 4.20.0 — the latest release — still depends on `cookie ^0.16`, so there is no upstream release to upgrade to (same situation as the h2 pin in D-003). Teddy itself has no direct cookie dependency.
+
+**Decision:**
+- Ignore RUSTSEC-2026-0594 in `.cargo/audit.toml` until actix-web ships a release using cookie >= 0.18.3.
+- Risk accepted as non-exploitable: Teddy uses no cookies anywhere (no `cookie` reference in `src/`, no session/cookie middleware) and runs as a single-process actix server — it never forks. The vulnerable code path (private/signed cookie nonce generation after fork) is unreachable.
+- RUSTSEC-2026-0592 (`url` 2.5.8 stack overflow in `Url::origin()`), found in the same audit run, was fixed immediately by `cargo update -p url` (2.5.9) — no ignore needed.
+
+**Consequences:** Audit passes locally and in CI. The ignore must be removed once actix-web upgrades to cookie 0.18.3+; track it alongside the actix-web 5 upgrade path of D-003/D-004 (actix-web issue #4199).
+
+---
+
 ## D-009 — Adopt the Apache License 2.0
 
 **Date:** 2026-10-15

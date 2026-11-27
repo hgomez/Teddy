@@ -1,4 +1,5 @@
 [advisories]
 ignore = [
     "RUSTSEC-2026-0258", # h2 0.3.x set by actix-http v3 (DoS empty DATA frames) - see https://github.com/actix/actix-web/issues/4199
+    "RUSTSEC-2026-0594", # cookie 0.16.x set by actix-web 4 (private cookie nonces repeat after fork) - no fix released yet, Teddy uses no cookies and does not fork - see docs/DECISIONS.md D-010
 ]
